@@ -56,7 +56,7 @@ export WANT_AUTOCONF_2_5=1
 rm -f missing
 libtoolize --copy --force; aclocal-1.7; autoconf; automake-1.7 --add-missing
 
-%configure2_5x \
+%configure2_5x --localstatedir=/var/lib \
     --with-apxs2=%{_sbindir}/apxs
 
 make
