@@ -6,7 +6,7 @@
 Summary:	DSO module for the apache web server
 Name:		apache-%{mod_name}
 Version:	1.3c
-Release:	%mkrel 9
+Release:	%mkrel 10
 Group:		System/Servers
 License:	GPL
 URL:		http://www.trickytools.com/php/mod_parmguard.php
@@ -16,6 +16,7 @@ Patch0:		mod_parmguard-1.3-soname_fix.diff
 Patch1:		mod_parmguard-1.2-apache220_1.diff
 Patch2:		mod_parmguard-1.2-apache220_2.diff
 Patch3:		mod_parmguard-1.3-checkconf.diff
+Patch4:		mod_parmguard-1.3-format_not_a_string_literal_and_no_format_arguments.diff
 BuildRequires:	autoconf2.5
 BuildRequires:	automake1.7
 BuildRequires:	libtool
@@ -43,6 +44,7 @@ do not match the criteria, the request is rejected.
 %patch1 -p0 -b .apache220_1
 %patch2 -p1 -b .apache220_2
 %patch3 -p0 -b .checkconf
+%patch4 -p0 -b .format_not_a_string_literal_and_no_format_arguments
 
 # fix strange perms
 find doc/manual -type f | xargs chmod 644
