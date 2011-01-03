@@ -6,7 +6,7 @@
 Summary:	DSO module for the apache web server
 Name:		apache-%{mod_name}
 Version:	1.3c
-Release:	%mkrel 13
+Release:	%mkrel 14
 Group:		System/Servers
 License:	GPL
 URL:		http://www.trickytools.com/php/mod_parmguard.php
@@ -18,7 +18,7 @@ Patch2:		mod_parmguard-1.2-apache220_2.diff
 Patch3:		mod_parmguard-1.3-checkconf.diff
 Patch4:		mod_parmguard-1.3-format_not_a_string_literal_and_no_format_arguments.diff
 BuildRequires:	autoconf2.5
-BuildRequires:	automake1.7
+BuildRequires:	automake
 BuildRequires:	libtool
 BuildRequires:	libxml2-devel
 Requires(pre): rpm-helper
@@ -56,7 +56,7 @@ find . -type f|xargs file|grep 'text'|cut -d: -f1|xargs perl -p -i -e 's/\r//'
 %build
 export WANT_AUTOCONF_2_5=1
 rm -f missing
-libtoolize --copy --force; aclocal-1.7; autoconf; automake-1.7 --add-missing
+libtoolize --copy --force; aclocal; autoconf; automake --add-missing
 
 %configure2_5x --localstatedir=/var/lib \
     --with-apxs2=%{_sbindir}/apxs
