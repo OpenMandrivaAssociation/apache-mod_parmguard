@@ -1,0 +1,124 @@
+diff -Naur mod_parmguard-1.3/src/checkconf.c mod_parmguard-1.3.oden/src/checkconf.c
+--- mod_parmguard-1.3/src/checkconf.c	2006-04-15 21:23:31.000000000 +0200
++++ mod_parmguard-1.3.oden/src/checkconf.c	2006-04-15 20:45:16.000000000 +0200
+@@ -118,9 +118,9 @@
+ 	return strdup(s);
+ }
+ 
+-regex_t *AP_PREGCOMP(void *p, const char *pat, int fl)
++ap_regex_t *AP_PREGCOMP(void *p, const char *pat, int fl)
+ {
+-	regex_t *reg = (regex_t *)malloc(sizeof(regex_t));
++	ap_regex_t *reg = (ap_regex_t *)malloc(sizeof(ap_regex_t));
+ 	if (!regcomp(reg,pat,fl)) return reg;
+ 	return NULL;
+ }
+diff -Naur mod_parmguard-1.3/src/common.h mod_parmguard-1.3.oden/src/common.h
+--- mod_parmguard-1.3/src/common.h	2006-04-15 21:23:31.000000000 +0200
++++ mod_parmguard-1.3.oden/src/common.h	2006-04-15 20:45:55.000000000 +0200
+@@ -70,7 +70,7 @@
+ 
+ void *APR_PALLOC(void *p, unsigned int t);
+ void *APR_PSTRDUP(void *p, const char *s);
+-regex_t *AP_PREGCOMP(void *p, const char *pat, int fl);
++ap_regex_t *AP_PREGCOMP(void *p, const char *pat, int fl);
+ apr_status_t APR_POOL_CREATE(apr_pool_t **p);
+ void APR_POOL_DESTROY(apr_pool_t *p);
+ 
+diff -Naur mod_parmguard-1.3/src/mod_parmguard.c mod_parmguard-1.3.oden/src/mod_parmguard.c
+--- mod_parmguard-1.3/src/mod_parmguard.c	2006-04-15 21:23:31.000000000 +0200
++++ mod_parmguard-1.3.oden/src/mod_parmguard.c	2006-04-15 21:17:51.000000000 +0200
+@@ -87,7 +87,7 @@
+  */
+ void *APR_PALLOC(void *p, unsigned int t) { return apr_palloc(p,t); }
+ void *APR_PSTRDUP(void *p, const char *s) { return apr_pstrdup(p,s); }
+-regex_t *AP_PREGCOMP(void *p, const char *pat, int fl) { return ap_pregcomp(p,pat,fl); }
++ap_regex_t *AP_PREGCOMP(void *p, const char *pat, int fl) { return ap_pregcomp(p,pat,fl); }
+ apr_status_t APR_POOL_CREATE(apr_pool_t **p) { return (apr_status_t)apr_pool_create(p,NULL); }
+ void APR_POOL_DESTROY(apr_pool_t *p) { apr_pool_destroy(p); }
+ 
+@@ -349,11 +349,15 @@
+  * ------------------------
+  */
+ command_rec parmguard_cmds[] = {
+-    { "ParmguardEngine", parmguard_engine_cmd, NULL, ACCESS_CONF, FLAG, "Start/Stop the engine" },
+-    { "ParmguardTrace", parmguard_trace_cmd, NULL, RSRC_CONF, TAKE1, "Debug listed components (debug)" },
+-    { "ParmguardConfFile", parmguard_conffile_cmd, NULL, RSRC_CONF|ACCESS_CONF, TAKE1, "Configuration file" },
+-    { "ParmguardPeriodicReload", parmguard_periodic_reload, NULL, RSRC_CONF, TAKE1, "Time (in seconds) before re-reading the configuration files" },
+-    { NULL }
++    AP_INIT_FLAG("ParmguardEngine", parmguard_engine_cmd, NULL, 
++     ACCESS_CONF, "Start/Stop the engine"),
++    AP_INIT_TAKE1("ParmguardTrace", parmguard_trace_cmd, NULL, 
++     RSRC_CONF, "Debug listed components (debug)"),
++    AP_INIT_TAKE1("ParmguardConfFile", parmguard_conffile_cmd, NULL, 
++     RSRC_CONF|ACCESS_CONF, "Configuration file"),
++    AP_INIT_TAKE1("ParmguardPeriodicReload", parmguard_periodic_reload, NULL, 
++     RSRC_CONF, "Time (in seconds) before re-reading the configuration files"),
++    {NULL}
+ };
+ 
+ /*
+@@ -430,7 +434,9 @@
+ 			if (rv != APR_SUCCESS)
+ 				return rv;
+ 
+-			APR_BRIGADE_FOREACH(bucket,bb) {
++		        for (bucket = APR_BRIGADE_FIRST(bb);
++		             bucket != APR_BRIGADE_SENTINEL(bb);
++		             bucket = APR_BUCKET_NEXT(bucket)) {
+ 				const char *data;
+ 				apr_size_t len;
+ 
+diff -Naur mod_parmguard-1.3/src/rules.c mod_parmguard-1.3.oden/src/rules.c
+--- mod_parmguard-1.3/src/rules.c	2006-04-15 21:23:31.000000000 +0200
++++ mod_parmguard-1.3.oden/src/rules.c	2006-04-15 21:06:11.000000000 +0200
+@@ -194,8 +194,8 @@
+ 		else if (!xmlStrcmp(aname,(const xmlChar *)"charclass")) {
+ 			/* compile the regexp: */
+ 			guard_aval_t *aval = AddValue(ctxt->pool,m_value,attr,avalue);
+-			regex_t *reg = NULL;
+-			if (!(reg = AP_PREGCOMP(ctxt->pool,avalue,REG_EXTENDED|REG_NOSUB))) {
++			ap_regex_t *reg = NULL;
++			if (!(reg = AP_PREGCOMP(ctxt->pool,avalue,AP_REG_EXTENDED|AP_REG_NOSUB))) {
+ 				(*perr)("Bad RE for 'charclass' constraint: %s",avalue);
+ 				return 1;
+ 			}
+@@ -513,7 +513,7 @@
+ guard_rule_t *AddRule(guard_ctxt_t *ctxt, const char *server, int port, const char *path)
+ {
+ 	guard_rule_t *p = APR_PALLOC(ctxt->pool,sizeof(guard_rule_t));
+-	regex_t *reg = NULL;
++	ap_regex_t *reg = NULL;
+ 	assert(p);
+ 	memset(p,0,sizeof(guard_rule_t));
+ 	if (server) p->m_server = (const char *)APR_PSTRDUP(ctxt->pool,server);
+@@ -523,7 +523,7 @@
+ 	NEXT(p) = ctxt->p_guard_rule;
+ 
+ 	/* compile the regexp: */
+-	if (!(reg = AP_PREGCOMP(ctxt->pool,path,REG_EXTENDED|REG_NOSUB))) {
++	if (!(reg = AP_PREGCOMP(ctxt->pool,path,AP_REG_EXTENDED|AP_REG_NOSUB))) {
+ 		(*perr)("Bad RE for <match> tag: %s",path);
+ 		return NULL;
+ 	}
+diff -Naur mod_parmguard-1.3/src/rules.h mod_parmguard-1.3.oden/src/rules.h
+--- mod_parmguard-1.3/src/rules.h	2006-04-15 21:23:31.000000000 +0200
++++ mod_parmguard-1.3.oden/src/rules.h	2006-04-15 20:45:43.000000000 +0200
+@@ -98,7 +98,7 @@
+ 	const char			*m_svalue;	/* string representation of the value */
+ 	long				m_lvalue;	/* long value */
+ 	double				m_fvalue;	/* float value */
+-	regex_t				*m_regexp;	/* compiled regexp for 'charclass' constraint */
++	ap_regex_t			*m_regexp;	/* compiled regexp for 'charclass' constraint */
+ 	struct _guard_aval_t		*m_next;
+ } guard_aval_t;
+ 
+@@ -132,7 +132,7 @@
+ 	const char 			*m_server;	/* server name: www.server.com , if NULL, means *ANY* server */
+ 	int				m_port;		/* HTTP Port, if NULL, means *ANY* port  */
+ 	const char			*m_path;	/* everything before the parms, accepts metachars, NULL means *ANY* URL */
+-	regex_t				*m_regexp;	/* compiled path */
++	ap_regex_t			*m_regexp;	/* compiled path */
+ 	guard_parm_t			*m_parm;	/* first constraint on parms */
+ 	struct _guard_rule_t		*m_next;	/* ptr to next rule */
+ 	lsParmguardCtxt			*m_ctxt;	/* NULL except if overwrite global parameters (unused) */

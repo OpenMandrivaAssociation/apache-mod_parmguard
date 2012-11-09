@@ -1,0 +1,11 @@
+--- src/mod_parmguard.c	2009-01-07 10:33:06.000000000 +0100
++++ src/mod_parmguard.c.oden	2009-01-07 10:34:20.000000000 +0100
+@@ -76,7 +76,7 @@ static void ParmguardError(const char *f
+ 	va_start(ap,format);
+ 	vsnprintf(buffer,sizeof(buffer)-1,format,ap);
+ 
+-	ap_log_error(APLOG_MARK,APLOG_ERR|APLOG_NOERRNO,ALE2(APR_SUCCESS)NULL,buffer); 
++	ap_log_error(APLOG_MARK,APLOG_ERR|APLOG_NOERRNO,ALE2(APR_SUCCESS)NULL,"%s",buffer); 
+ 	va_end(ap);
+ }
+ 
