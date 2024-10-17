@@ -9,7 +9,7 @@ Version:	1.3c
 Release:	17
 Group:		System/Servers
 License:	GPL
-URL:		http://www.trickytools.com/php/mod_parmguard.php
+URL:		https://www.trickytools.com/php/mod_parmguard.php
 Source0:	http://www.trickytools.com/downloads/%{mod_name}-%{version}.tar.bz2
 Source1:	%{mod_conf}.bz2
 Patch0:		mod_parmguard-1.3-soname_fix.diff
