@@ -17,6 +17,8 @@ Patch1:		mod_parmguard-1.2-apache220_1.diff
 Patch2:		mod_parmguard-1.2-apache220_2.diff
 Patch3:		mod_parmguard-1.3-checkconf.diff
 Patch4:		mod_parmguard-1.3-format_not_a_string_literal_and_no_format_arguments.diff
+BuildRequires:	libtool-base
+BuildRequires:	slibtool
 BuildRequires:	autoconf2.5
 BuildRequires:	automake
 BuildRequires:	libtool
